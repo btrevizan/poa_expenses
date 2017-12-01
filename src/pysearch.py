@@ -5,6 +5,19 @@ import numpy as np
 from .pysort import def_key
 
 
+def search(sequence, n, key=def_key, how='binary'):
+    """Search an element n in a sequence.
+
+    Keyword arguments:
+        sequence -- a 1darray to order
+        n -- element to be searched
+        key -- function that retrive a singular element
+        (default is the element itself)
+        how -- {'linear', (default 'binary')}
+    """
+    return eval('{}(sequence, n, key)'.format(how))
+
+
 def linear(sequence, n, key=def_key):
     """Search an element linearly and return its first index.
 
@@ -51,7 +64,7 @@ def binary(sequence, n, key=def_key):
     k = length          # stop
     i = (j + k) // 2    # middle
 
-    while j < k:
+    while j < i:
         # If sequence[i] is the element, return its index
         if n == key(sequence[i]):
             return i
