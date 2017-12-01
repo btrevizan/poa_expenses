@@ -44,7 +44,40 @@ def timsort(sequence, key=def_key):
         r = r * 2
 
 
-def __simplemerge(self, sequence1, sequence2, key=def_key):
+def insertion(sequence, key=def_key):
+        """Insertion sort with sequencial search.
+
+        Keyword arguments:
+            sequence -- a 1darray to order
+            key -- function that retrive a singular element
+            (default is the element itself)
+        """
+        n = len(sequence)  # number of elements
+
+        # For each element...
+        for i in range(1, n):
+            value = sequence[i]
+
+            # For each element already sorted...
+            j = i - 1       # index of prev element
+            while j >= 0:
+
+                # Compare elements
+                changed = key(value) < key(sequence[j])
+                if not changed:
+                    break
+
+                # Move the element forward by 1
+                sequence[j + 1] = sequence[j]
+
+                # Update j
+                j = j - 1
+
+            # Insert element after sequence[j]
+            sequence[j + 1] = value
+
+
+def __simplemerge(sequence1, sequence2, key=def_key):
     """Merge two sequences. The result is a sorted list.
 
     Keyword arguments:
@@ -53,6 +86,7 @@ def __simplemerge(self, sequence1, sequence2, key=def_key):
         key -- function that retrive a singular element
         (default is the element itself)
     """
+
     n1 = len(sequence1)  # sequence's 1 length
     n2 = len(sequence2)  # sequence's 2 length
     l = 0                # left's index
