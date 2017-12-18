@@ -1,5 +1,3 @@
-"""Read and write sets of data in a binary file."""
-
 from struct import Struct
 
 
@@ -12,18 +10,16 @@ class StructFile():
         length -- number of structs in file
     """
 
-    def __init__(self, filepath, fmt, obj_fmt=None):
+    def __init__(self, filepath, fmt):
         """Open file in binary mode and set properties.
 
         Keyword arguments:
             filepath -- absolute/relative path of the file to be read
             fmt -- format of file's struct
-            obj_fmt -- a named tuple (default None)
         """
         self.__filepath = filepath
         self.__strct = Struct(fmt)           # file's data structure
         self.__file = open(filepath, 'ab+')  # open file
-        self.__obj = obj_fmt                 # python's data structure
 
         self.__file.seek(0)                  # begin of file
 
@@ -86,6 +82,7 @@ class StructFile():
         """Get the n data starting from the ith.
 
         Keyword argument:
+            i -- position in file
             n -- number of structs to be retrieved (default 1)
                  Must be greater than 0.
 
@@ -95,6 +92,10 @@ class StructFile():
 
         *This method changes file.tell value.
         """
+        # If there is nothing to get...
+        if self.size == 0:
+            return None
+
         # Current byte position - (n * data_size)
         offset = i * self.__strct.size
 
@@ -107,6 +108,16 @@ class StructFile():
         # If n is 1, return a single unpacked data.
         # Otherwise, return a list of unpacked data
         return next(data) if n == 1 else list(data)
+
+    def last(self):
+        """Get the last object in file."""
+        # End of file
+        self.__file.seek(0, 2)
+
+        # Get the last struct
+        data = self.get(-1)
+
+        return data
 
     def raw(self, n=1):
         """Get the data from file*.
@@ -140,14 +151,7 @@ class StructFile():
         # Unpack
         data = self.__strct.unpack(raw_data)
 
-        # If there is no template to format data
-        if self.__obj is None:
-            # If data is a single data, return it.
-            # Return a tuple with all data, otherwise.
-            return data if len(self.__strct.format) > 1 else data[0]
-
-        # There is a template to format data
-        return self.__obj.__make(data)
+        return data
 
     def pack(self, value):
         """Pack the data according to format and return a binary string.
@@ -155,19 +159,16 @@ class StructFile():
         Keyword arguments:
             value -- value to be packed
         """
-        return self.__strct.pack(value)
+        return self.__strct.pack(*value)
 
     def append(self, value):
         """Write the value into the file.
 
         Keyword arguments:
-            value -- value to be writen
+            value -- value to be writen (tuple)
         """
         # Pack value
         data = self.pack(value)
-
-        # Save file position
-        old = self.__file.tell()
 
         # End of file
         self.__file.seek(0, 2)
@@ -175,15 +176,30 @@ class StructFile():
         # Write packed value
         self.__file.write(data)
 
-        # Back to old position
-        self.__file.seek(old)
+    def write(self, i, value):
+        """Write value in ith position in file.
+
+        Keyword arguments:
+            i -- position in file
+            value -- value to be packed (tuple)
+        """
+        # Current byte position - (n * data_size)
+        offset = i * self.__strct.size
+
+        # Set file pointer to -(#data)
+        self.__file.seek(offset)
+
+        # Pack value
+        data = self.pack(value)
+
+        # Write packed value
+        self.__file.write(data)
 
     def __repr__(self):
         """Class representation string."""
-        return "{}({}, {}, {})".format(self.__class__.__name__,
-                                       self.__filepath,
-                                       self.__strct.format,
-                                       str(self.__obj))
+        return "{}({}, {})".format(self.__class__.__name__,
+                                   self.__filepath,
+                                   self.__strct.format)
 
     def __str__(self):
         """Return a str(list) of data."""
