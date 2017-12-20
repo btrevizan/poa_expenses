@@ -195,8 +195,8 @@ class StructFile():
         # Write packed value
         self.__file.write(data)
 
-    def erase(self, i, size=None):
-        """Erase [size] bytes of data from ith elem.
+    def truncate(self, n):
+        """Erase data to [size] bytes.
 
         Keyword arguments:
             i -- position in file
@@ -204,10 +204,8 @@ class StructFile():
                     When (default None), the file is erased until the end.
         """
         # Current byte position - (n * data_size)
-        offset = i * self.__strct.size
-
-        # Set file pointer to -(#data)
-        self.__file.seek(offset)
+        size = n * self.__strct.size
+        size = self.size - size
 
         # Erase [size] bytes from file.tell()
         self.__file.truncate(size)
