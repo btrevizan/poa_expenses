@@ -43,7 +43,7 @@ class StructFile():
     @property
     def length(self):
         """Return the number of structs in file."""
-        return self.size // self.__.strct.size
+        return self.size // self.__strct.size
 
     def next(self, n=1):
         """Get the next n data from file*.
@@ -194,6 +194,23 @@ class StructFile():
 
         # Write packed value
         self.__file.write(data)
+
+    def erase(self, i, size=None):
+        """Erase [size] bytes of data from ith elem.
+
+        Keyword arguments:
+            i -- position in file
+            size -- how much data should be removed in bytes.
+                    When (default None), the file is erased until the end.
+        """
+        # Current byte position - (n * data_size)
+        offset = i * self.__strct.size
+
+        # Set file pointer to -(#data)
+        self.__file.seek(offset)
+
+        # Erase [size] bytes from file.tell()
+        self.__file.truncate(size)
 
     def __repr__(self):
         """Class representation string."""
