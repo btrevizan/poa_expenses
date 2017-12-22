@@ -64,10 +64,12 @@ def binary(sequence, n, key=def_key):
     k = length          # stop
     i = (j + k) // 2    # middle
 
-    while j < i:
+    while j <= i:
         # If sequence[i] is the element, return its index
         if n == key(sequence[i]):
             return i
+        elif j == i:
+            return None
         elif n < key(sequence[i]):
             k = i  # update stop
         else:
