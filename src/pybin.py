@@ -102,6 +102,9 @@ class StructFile():
         if self.size == 0:
             return None
 
+        if n < 1:
+            return []
+
         # Current byte position - (n * data_size)
         offset = i * self.__strct.size
 
@@ -109,14 +112,13 @@ class StructFile():
         self.__file.seek(offset)
 
         # Unpack raw data to struct
-        data = list(map(lambda x: self.unpack(x), self.raw(n)))
-
-        if n == 1:
-            data = data if len(data[0]) > 1 else data[0][0]
+        data = map(lambda x: self.unpack(x), self.raw(n))
+        data = map(lambda x: x if len(x) > 1 else x[0], data)
+        data = list(data)
 
         # If n is 1, return a single unpacked data.
         # Otherwise, return a list of unpacked data
-        return data
+        return data[0] if n == 1 else data
 
     def last(self):
         """Get the last object in file."""
