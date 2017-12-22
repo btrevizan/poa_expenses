@@ -19,9 +19,15 @@ class StructFile():
         """
         self.__filepath = filepath
         self.__strct = Struct(fmt)           # file's data structure
-        self.__file = open(filepath, 'ab+')  # open file
 
-        self.__file.seek(0)                  # begin of file
+        # Open file
+        try:
+            file = open(filepath, 'rb+')
+        except FileNotFoundError:
+            file = open(filepath, 'wb+')
+        finally:
+            self.__file = file
+            self.__file.seek(0)                  # begin of file
 
     @property
     def size(self):
@@ -103,11 +109,14 @@ class StructFile():
         self.__file.seek(offset)
 
         # Unpack raw data to struct
-        data = map(lambda x: self.unpack(x), self.raw(n))
+        data = list(map(lambda x: self.unpack(x), self.raw(n)))
+
+        if n == 1:
+            data = data if len(data[0]) > 1 else data[0][0]
 
         # If n is 1, return a single unpacked data.
         # Otherwise, return a list of unpacked data
-        return next(data) if n == 1 else list(data)
+        return data
 
     def last(self):
         """Get the last object in file."""
