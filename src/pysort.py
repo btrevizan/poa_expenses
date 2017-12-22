@@ -26,7 +26,8 @@ def timsort(sequence, key=def_key):
 
     # For each run, sort with insertion
     for i in range(0, n, r):
-        insertion(sequence[i:i + r], key)  # sort with insertion
+        # Sort with insertion
+        sequence[i:i + r] = insertion(sequence[i:i + r], key)
 
     # For each run, pairwise merge
     while r < n:
@@ -43,38 +44,42 @@ def timsort(sequence, key=def_key):
 
         r = r * 2
 
+    return sequence
+
 
 def insertion(sequence, key=def_key):
-        """Insertion sort with sequencial search.
+    """Insertion sort with sequencial search.
 
-        Keyword arguments:
-            sequence -- a 1darray to order
-            key -- function that retrive a singular element
-            (default is the element itself)
-        """
-        n = len(sequence)  # number of elements
+    Keyword arguments:
+        sequence -- a 1darray to order
+        key -- function that retrive a singular element
+        (default is the element itself)
+    """
+    n = len(sequence)  # number of elements
 
-        # For each element...
-        for i in range(1, n):
-            value = sequence[i]
+    # For each element...
+    for i in range(1, n):
+        value = sequence[i]
 
-            # For each element already sorted...
-            j = i - 1       # index of prev element
-            while j >= 0:
+        # For each element already sorted...
+        j = i - 1       # index of prev element
+        while j >= 0:
 
-                # Compare elements
-                changed = key(value) < key(sequence[j])
-                if not changed:
-                    break
+            # Compare elements
+            changed = key(value) < key(sequence[j])
+            if not changed:
+                break
 
-                # Move the element forward by 1
-                sequence[j + 1] = sequence[j]
+            # Move the element forward by 1
+            sequence[j + 1] = sequence[j]
 
-                # Update j
-                j = j - 1
+            # Update j
+            j = j - 1
 
-            # Insert element after sequence[j]
-            sequence[j + 1] = value
+        # Insert element after sequence[j]
+        sequence[j + 1] = value
+
+    return sequence
 
 
 def __simplemerge(sequence1, sequence2, key=def_key):
@@ -126,4 +131,4 @@ def __simplemerge(sequence1, sequence2, key=def_key):
         # Update i
         i += 1
 
-    return np.array(merge)
+    return merge
