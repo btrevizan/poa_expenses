@@ -1,3 +1,4 @@
+from .inverted import Inverted
 from .pybin import StructFile
 from .btree import BTree
 
@@ -157,6 +158,16 @@ class Department(Registry):
         self.id = kwargs.get('id', self.id)
         self.name = kwargs.get('name', self.name)
 
+    def insert(self):
+        """Insert as super and add name in inverted file."""
+        # Save as super
+        id = super().insert()
+
+        # Insert in inverted file
+        inverted = Inverted('database/' + self.__table)  # open file
+        inverted.insert(self.name, id)                   # insert
+
+        return id
 
 class Subdepartment(Registry):
     """Represent a Subdepartment registry.
@@ -188,6 +199,17 @@ class Subdepartment(Registry):
         self.name = kwargs.get('name', self.name)
         self.department_id = kwargs.get('department_id', self.department_id)
 
+    def insert(self):
+        """Insert as super and add name in inverted file."""
+        # Save as super
+        id = super().insert()
+
+        # Insert in inverted file
+        inverted = Inverted('database/' + self.__table)  # open file
+        inverted.insert(self.department_id, id)          # insert
+
+        return id
+
 
 class Employee(Registry):
     """Represent a Employee registry.
@@ -218,6 +240,17 @@ class Employee(Registry):
         self.id = kwargs.get('id', self.id)
         self.name = kwargs.get('name', self.name)
         self.subdepartment_id = kwargs.get('subdepartment_id', self.subdepartment_id)
+
+    def insert(self):
+        """Insert as super and add name in inverted file."""
+        # Save as super
+        id = super().insert()
+
+        # Insert in inverted file
+        inverted = Inverted('database/' + self.__table)  # open file
+        inverted.insert(self.subdepartment_id, id)                   # insert
+
+        return id
 
 
 class Transaction(Registry):
@@ -258,3 +291,13 @@ class Transaction(Registry):
         self.value = kwargs.get('value', self.value)
         self.date = kwargs.get('date', self.date)
 
+    def insert(self):
+        """Insert as super and add name in inverted file."""
+        # Save as super
+        id = super().insert()
+
+        # Insert in inverted file
+        inverted = Inverted('database/' + self.__table)  # open file
+        inverted.insert(self.employee_id, id)            # insert
+
+        return id
