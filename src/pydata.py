@@ -75,9 +75,11 @@ class Registry():
         # For each pk...
         for pk in pks:
             i = self.__btree.search(pk)  # get registry position in file
-            data = self.__strct.get(i)   # get data in file
-            obj = self.object(data)      # create an object from data
-            objs.append(obj)             # save object
+
+            if i is not None:
+                data = self.__strct.get(i)   # get data in file
+                obj = self.object(data)      # create an object from data
+                objs.append(obj)             # save object
 
         return objs
 
