@@ -1,7 +1,6 @@
 """Search algorithms adapted from https://github.com/btrevizan/ordernsearch.git."""
 
 
-import numpy as np
 from .pysort import def_key
 
 

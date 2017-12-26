@@ -1,9 +1,6 @@
 """Sort algorithm adapted from https://github.com/btrevizan/ordernsearch.git."""
 
 
-import numpy as np
-
-
 def def_key(x):
     """Return the element to compare with.
 
