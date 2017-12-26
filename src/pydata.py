@@ -8,7 +8,7 @@ class Registry():
     def __init__(self, table, fmt, pk):
         self.__pk = pk
         self.__strct = StructFile("database/" + table + '.data', fmt)
-        self.__btree = BTree("database/" + table + '.btree', fmt)
+        self.__btree = BTree("database/" + table + '.btree')
 
     def save(self):
         """If object exists, update informations. Insert it, otherwise."""
@@ -24,7 +24,8 @@ class Registry():
 
         # Get new id (incremental)
         last = self.last()
-        exec('self.{} = last.{} + 1'.format(self.__pk, self.__pk))
+        last_pk = 0 if last is None else eval('last.' + self.__pk)
+        exec('self.{} = last_pk + 1'.format(self.__pk, self.__pk))
         attrs[self.__pk] = eval('self.{}'.format(self.__pk))
 
         # Create a tuple of all properties
@@ -80,12 +81,11 @@ class Registry():
 
         return objs
 
-    @classmethod
-    def object(cls, data):
+    def object(self, values):
         """Receive a tuple with data and return an object.
 
         Keyword arguments:
-            data -- tuple with data
+            values -- tuple with data
         """
         attrs = self.__get_attr()  # get attribute
         keys = list(attrs.keys())  # get attributes' name
@@ -93,16 +93,21 @@ class Registry():
         n = len(keys)              # number of attributes
 
         # Create a dict with key, value
-        data = {kwargs[keys[i]]: data[i] for i in range(n)}
+        data = dict()
+
+        for i in range(n):
+            data[keys[i]] = values[i]
+
+            if type(values[i]) is bytes:
+                data[keys[i]] = values[i].decode('utf-8')
 
         # Return an object
-        return cls(**data)
+        return eval('{}(**data)'.format(self.__class__.__name__))
 
-    @classmethod
-    def last(cls):
+    def last(self):
         """Get the lastest inserted element."""
-        data = cls.__strct.last()
-        return cls.object(data)
+        data = self.__strct.last()
+        return None if data is None else self.object(data)
 
     def __get_attr(self):
         # Get objects attributes as {attribute_name: value}
@@ -112,7 +117,14 @@ class Registry():
         key, value = zip(*attrs.items())
 
         # Create a tuple of all properties
-        data = {k: attrs[k] for k in key if '__' not in k}
+        data = dict()
+
+        for k in key:
+            if '__' not in k:
+                data[k] = attrs[k]
+
+                if type(attrs[k]) is str:
+                    data[k] = bytes(data[k], encoding='utf-8')
 
         return data
 
