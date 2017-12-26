@@ -126,7 +126,7 @@ class StructFile():
         self.__file.seek(0, 2)
 
         # Get the last struct
-        data = self.get(-1)
+        data = self.get(self.length - 1)
 
         return data
 
