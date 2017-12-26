@@ -215,8 +215,7 @@ class StructFile():
                     When (default None), the file is erased until the end.
         """
         # Current byte position - (n * data_size)
-        size = n * self.__strct.size
-        size = self.size - size
+        size = self.size - n * self.__strct.size
 
         # Erase [size] bytes from file.tell()
         self.__file.truncate(size)
