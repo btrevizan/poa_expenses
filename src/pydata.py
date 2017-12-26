@@ -149,7 +149,7 @@ class Department(Registry):
             name -- department's name (default '')
         """
         self.__table = 'department'
-        self.__fmt = 'I50s'
+        self.__fmt = 'I100s'
         self.__pk = 'id'
 
         super().__init__(self.__table, self.__fmt, self.__pk)
@@ -179,7 +179,7 @@ class Subdepartment(Registry):
             department_id -- department code (default None)
         """
         self.__table = 'subdepartment'
-        self.__fmt = 'I50sI'
+        self.__fmt = 'I100sI'
         self.__pk = 'id'
 
         super().__init__(self.__table, self.__fmt, self.__pk)
@@ -210,7 +210,7 @@ class Employee(Registry):
             subdepartment_id -- subdepartment code (default None)
         """
         self.__table = 'employee'
-        self.__fmt = 'I100sI'
+        self.__fmt = 'I70sI'
         self.__pk = 'id'
 
         super().__init__(self.__table, self.__fmt, self.__pk)
@@ -247,7 +247,7 @@ class Transaction(Registry):
             date -- transaction's date as timestamp (default 0)
         """
         self.__table = 'transaction'
-        self.__fmt = '2I900sfL'
+        self.__fmt = '2I2000sfL'
         self.__pk = 'id'
 
         super().__init__(self.__table, self.__fmt, self.__pk)
