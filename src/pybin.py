@@ -210,7 +210,6 @@ class StructFile():
         """Erase data to [size] bytes.
 
         Keyword arguments:
-            i -- position in file
             size -- how much data should be removed in bytes.
                     When (default None), the file is erased until the end.
         """
