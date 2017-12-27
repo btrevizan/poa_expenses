@@ -30,7 +30,7 @@ def clear(data):
     for j in range(m):
         sample = data.iloc[0, j]
 
-        if len(str(sample).split('-')) == 3:
+        if len(str(sample).split('-')) == 3 and 'T00:00:00' in sample:
             dtype = to_date
         elif type(sample) is str:
             dtype = to_str
