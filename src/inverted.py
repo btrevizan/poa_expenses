@@ -105,9 +105,52 @@ class Inverted():
         Keyword argument:
             key -- dict's key
         """
-        i = self.__dict[key]            # get file position
-        values, _ = self.__get(i)       # get values
-        return values                   # return values
+        try:
+            i = self.__dict[key]            # get file position
+            values, _ = self.__get(i)       # get values
+            return values                   # return values
+        except KeyError:
+            return list()                   # key dos not exist
+
+    def update(self, old, new):
+        """Update a key label.
+
+        Keyword arguments:
+            old -- old key
+            new -- new key
+        """
+        i = self.__dict[old]
+        self.__dict[new] = i
+
+        del self.__dict[old]
+
+    def delete(self, key, value):
+        """Delete all values from a key.
+
+        Keyword arguments:
+            key -- key to be deleted
+        """
+        n_keys = self.n_keys
+        i = self.__dict[key]            # get position in file
+
+        vals, pos = self.__get(i)
+
+        j = vals.index(value)         # get value index
+        del vals[j]                   # delete value
+
+        for i in range(len(pos) - 1):
+            p = pos[i]
+            l = i * self.n_keys
+            values = vals[l:l + self.n_keys]
+            values.append(pos[i + 1])
+            self.__save(p, values)
+
+        # Get elements from last list
+        j = len(vals) // self.n_keys
+        j = j * self.n_keys
+
+        values = vals[j:]
+        self.__save(pos[-1], values)
 
     def __save(self, i, values):
         """Prepare data and save on-disk.
