@@ -1,7 +1,8 @@
 from .inverted import Inverted
 from .pybin import StructFile
-from .btree import BTree
 from .helper import to_str
+from datetime import date
+from .btree import BTree
 
 
 class Registry():
@@ -100,7 +101,7 @@ class Registry():
         btree.insert(last_pk, i)
 
     @classmethod
-    def select(cls, pks):
+    def select(cls, pks, field='*'):
         """Select one or more registries according with parameters.
 
         Keyword arguments:
@@ -108,11 +109,17 @@ class Registry():
         """
         # Empty list for objects
         objs = list()
+        strct = cls.get_strct()
+        btree = cls.get_btree()
 
         # For each pk...
         for pk in pks:
-            obj = cls.get(pk)      # get obj from pk
-            objs.append(obj)        # save object
+            i = btree.search(pk)  # get registry position in file
+
+            if i is not None:
+                data = strct.get(i)
+                obj = cls.object(data) if field == '*' else data[field]
+                objs.append(obj)
 
         return objs
 
@@ -142,6 +149,21 @@ class Registry():
         strct = cls.get_strct()
         records = strct.get(0, strct.length)
         return [cls.object(r) for r in records]
+
+    @classmethod
+    def from_inverted(cls, key, suffix='', field='*'):
+        """Get objs from inverted file.
+
+        Keyword arguments:
+            key -- inverted file's key
+            suffix -- inverted file's suffix (default '')
+        """
+        # Get ids
+        inv = cls.get_inverted(suffix)
+        ids = inv.get(key)
+
+        # Get objects from ids
+        return super(cls, cls).select(ids, field)
 
     @classmethod
     def object(cls, values):
@@ -207,7 +229,8 @@ class Registry():
 
         string = ''
         for key in attrs:
-            string += '{}: {}\n'.format(key.upper(), eval('self.' + key))
+            value = eval('self.' + key)
+            string += '{}: {}\n'.format(key.upper(), value)
 
         return string[:-1]
 
@@ -279,21 +302,20 @@ class Department(Registry):
         inverted.update(record.name, self.name)     # update
 
     @classmethod
-    def select(cls, name):
+    def select(cls, **kwargs):
         """Select by name.
 
         Keyword argument:
             name -- department name (str)
         """
+        field = kwargs.get('field', '*')
+
         # Clear string
+        name = kwargs.get('name', '')
         name = to_str(name)
 
         # Get ids
-        inv = cls.get_inverted()
-        ids = inv.get(name)
-
-        # Get objects from ids
-        return super().select(ids)
+        return cls.from_inverted(name, field=field)
 
     def delete(self):
         """Remove a registry on-disk."""
@@ -386,24 +408,16 @@ class Subdepartment(Registry):
             dep_id -- department id (default None)
             name -- subdepartment's name (default '')
         """
+        field = kwargs.get('field', '*')
+
         dep_id = kwargs.get('dep_id', None)
         name = kwargs.get('name', '')
 
         if dep_id:
-            # Get ids
-            inv = cls.get_inverted()
-            ids = inv.get(dep_id)
-
-            # Get objects from ids
-            return super().select(ids)
+            return cls.from_inverted(dep_id, field=field)
 
         if len(name):
-            # Get ids
-            inv = cls.get_inverted('_name')
-            ids = inv.get(name)
-
-            # Get objects from ids
-            return super().select(ids)
+            return cls.from_inverted(name, '_name', field=field)
 
     def delete(self):
         """Remove a registry on-disk."""
@@ -478,6 +492,10 @@ class Employee(Registry):
         inverted = self.get_inverted('_name')         # open file
         inverted.insert(self.name, id)                # insert
 
+        subdep = Subdepartment.get(self.subdepartment_id)
+        inverted = self.get_inverted('_department')              # open file
+        inverted.insert(subdep.department_id, id)                # insert
+
         return id
 
     def update(self, i=None):
@@ -504,38 +522,23 @@ class Employee(Registry):
         When dep_id is set, subdep_id is ignored. The other way around also applies.
         """
         # Get params
+        field = kwargs.get('field', '*')
+
         dep_id = kwargs.get('dep_id', None)         # department id
         subdep_id = kwargs.get('subdep_id', None)   # subdepartment id
         name = kwargs.get('name', '')               # employee's name
 
         # If dep_id is set
         if dep_id:
-            subdep_inv = Subdepartment.get_inverted()
-            subdep_ids = subdep_inv.get(dep_id)
-
-            objs = list()
-            for sid in subdep_ids:
-                objs += cls.select(subdep_id=sid, name=name)
-
-            return objs
+            return cls.from_inverted(dep_id, '_department', field)
 
         # If subdep_id is set
         if subdep_id:
-            # Get ids
-            inv = cls.get_inverted()
-            ids = inv.get(subdep_id)
-
-            # Get objects from ids
-            return super().select(ids)
+            return cls.from_inverted(subdep_id, field=field)
 
         # If name is set
         if len(name):
-            # Get ids
-            inv = cls.get_inverted('_name')
-            ids = inv.get(name)
-
-            # Get objects from ids
-            return super().select(ids)
+            return cls.from_inverted(name, '_name', field)
 
     def delete(self):
         """Remove a registry on-disk."""
@@ -615,6 +618,18 @@ class Transaction(Registry):
         inverted = self.get_inverted()         # open file
         inverted.insert(self.employee_id, id)  # insert
 
+        employee = Employee.get(self.employee_id)
+        inverted = self.get_inverted('_subdepartment')     # open file
+        inverted.insert(employee.subdepartment_id, id)     # insert
+
+        subdep = Subdepartment.get(employee.subdepartment_id)
+        inverted = self.get_inverted('_department')             # open file
+        inverted.insert(subdep.department_id, id)               # insert
+
+        d = date.fromtimestamp(self.date)
+        inverted = self.get_inverted('_year')     # open file
+        inverted.insert(d.year, id)               # insert
+
         return id
 
     def update(self, i=None):
@@ -631,11 +646,28 @@ class Transaction(Registry):
         """Select by name.
 
         Keyword argument:
+            dep_id -- department id (default None)
+            subdep_id -- subdepartment id (default None)
             employee_id -- employee's id (default None)
-            description -- transaction's description (default '')
+            description -- transaction's (partial) description (default '')
+            year -- transaction's year (default None)
         """
+        field = kwargs.get('field', '*')
+        dep_id = kwargs.get('dep_id', None)
+        subdep_id = kwargs.get('subdep_id', None)
         employee_id = kwargs.get('employee_id', None)
         description = kwargs.get('description', '')
+        year = kwargs.get('year', None)
+
+        # If dep_id is set
+        if dep_id:
+            return cls.from_inverted(dep_id, '_department', field)
+
+        if subdep_id:
+            return cls.from_inverted(subdep_id, '_subdepartment', field)
+
+        if year:
+            return cls.from_inverted(year, '_year', field)
 
         if employee_id:
             # Get ids
@@ -643,8 +675,10 @@ class Transaction(Registry):
             ids = inv.get(employee_id)
 
             # Get objects from ids
-            objs = super().select(ids)
-            objs = filter(lambda x: description in x.description, objs)
+            objs = super().select(ids, field)
+
+            if len(description):
+                objs = filter(lambda x: description in x.description, objs)
 
             return list(objs)
 
@@ -654,4 +688,21 @@ class Transaction(Registry):
 
         inverted = self.get_inverted()                  # open file
         inverted.delete(self.employee_id, self.id)      # delete
+
+    def __str__(self):
+        attrs = self.get_attr(self)
+
+        string = ''
+        for key in attrs:
+            value = eval('self.' + key)
+
+            if key == 'date':
+                value = str(date.fromtimestamp(value))
+
+            if key == 'value':
+                string += '{}: R$ {:,.2f}\n'.format(key.upper(), value)
+            else:
+                string += '{}: {}\n'.format(key.upper(), value)
+
+        return string[:-1]
 
