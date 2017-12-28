@@ -79,9 +79,9 @@ $ python3 main.py --report <report_type> --<field> <field_value> --detailed True
 ```bash
 $ python3 main.py --report employee_expenses --name Fogaça
 ```
-This command shows total expenses by employee that has *Fogaça* in name. By default, detailed is set to False. When True, show all transactions.
+- This command shows total expenses by employee that has *Fogaça* in name. By default, `--detailed` is set to False. When True, show all transactions.
 ---
 ```bash
 $ python3 main.py --report total_expenses --year 2010
 ```
-To see the total of public expenses in 2010.
+- To see the total of public expenses in 2010.
