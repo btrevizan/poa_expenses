@@ -40,13 +40,13 @@ The `--load` flag loads the data from a .CSV file to database (data's binary rep
 $ python3 main.py --delete employee --id 10
 ```
 The command above deletes an employee with unique code equals to 10.
-*This method also deletes all related data.*
+\**This method also deletes all related data.*
 
 ### Update
 ```bash
 $ python3 main.py --update department --id 5 --name Secretaria de Saúde
 ```
-This command updates the name of a department record with id 10. According to data structure, you can update any information using the field's flag (ex.: --value to update a transaction's value).
+This command updates the name of a department record with id 10. According to data structure, you can update any information using the field's flag (ex.: `--value` to update a transaction's value).
 
 ### Search
 ```bash
@@ -77,7 +77,7 @@ $ python3 main.py --report <report_type> --<field> <field_value> --detailed True
 ---
 **Example**
 ```bash
-$ python3 main.py --report employee_expenses --name Fogaça --detailed True
+$ python3 main.py --report employee_expenses --name Fogaça
 ```
 This command shows total expenses by employee that has *Fogaça* in name. By default, detailed is set to False. When True, show all transactions.
 ---
