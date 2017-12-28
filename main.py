@@ -104,11 +104,11 @@ def update(args):
     if args.name:
         entity.name = to_str(args.name)
 
-    if args.dep_id:
-        entity.department_id = args.dep_id
+    if args.department_id:
+        entity.department_id = args.department_id
 
-    if args.subdep_id:
-        entity.subdepartment_id = args.supdep_id
+    if args.subdepartment_id:
+        entity.subdepartment_id = args.subdepartment_id
 
     if args.employee_id:
         entity.employee_id = args.employee_id
@@ -136,8 +136,8 @@ def search(args):
         kwargs = dict()
 
         kwargs['name'] = to_str(args.name)
-        kwargs['dep_id'] = args.dep_id
-        kwargs['subdep_id'] = args.subdep_id
+        kwargs['dep_id'] = args.department_id
+        kwargs['subdep_id'] = args.subdepartment_id
         kwargs['employee_id'] = args.employee_id
         kwargs['description'] = to_str(args.description)
 
@@ -389,17 +389,17 @@ if __name__ == "__main__":
                         default='',
                         help="Entity's name.")
 
-    parser.add_argument("-a", "--dep",
-                        dest="dep_id",
+    parser.add_argument("-a", "--department_id",
+                        dest="department_id",
                         default=None,
                         help="Entity's department id.")
 
-    parser.add_argument("-s", "--subdep",
-                        dest="subdep_id",
+    parser.add_argument("-s", "--subdepartment_id",
+                        dest="subdepartment_id",
                         default=None,
                         help="Entity's subdepartment id.")
 
-    parser.add_argument("-e", "--employee",
+    parser.add_argument("-e", "--employee_id",
                         dest="employee_id",
                         default=None,
                         help="Entity's employee id.")
