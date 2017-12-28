@@ -1,4 +1,5 @@
 import pickle
+from .helper import to_str
 from .pybin import StructFile
 from .pysort import timsort
 
@@ -26,7 +27,7 @@ class Inverted():
             pickle.dump(self.__dict, dict_file)         # save content
             dict_file.close()                           # close file
 
-        self.__n = 121
+        self.__n = 601
         self.__filename = filename
         self.__file = StructFile(filename + '.inv', str(self.__n) + 'i')
 
@@ -105,12 +106,39 @@ class Inverted():
         Keyword argument:
             key -- dict's key
         """
-        try:
-            i = self.__dict[key]            # get file position
-            values, _ = self.__get(i)       # get values
-            return values                   # return values
-        except KeyError:
-            return list()                   # key dos not exist
+        # If key is string, it can be a partial string
+        if type(key) is str:
+            # Clear string to match key
+            key = to_str(key)
+
+            # Find keys that have the partial key
+            dict_keys = list(self.__dict.keys())
+            key_in = [(key in k, k) for k in dict_keys]
+
+            # Filter the ones who does have
+            keys = filter(lambda x: x[0], key_in)
+            keys = list(keys)
+
+            if len(keys):
+                _, keys = zip(*keys)
+        else:
+            # Just force key to be a list
+            keys = [key]
+
+        # To save values
+        values = list()
+
+        # For each key found...
+        for k in keys:
+            try:
+                i = self.__dict[k]          # get file position
+                vals, _ = self.__get(i)     # get values
+                values += vals              # concat values
+            except KeyError:
+                pass                        # key dos not exist
+
+        # Return values
+        return values
 
     def update(self, old, new):
         """Update a key label.
