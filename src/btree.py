@@ -95,7 +95,6 @@ class Node():
             value -- key's value
         """
         self.keys = self.__keys + [(key, value)]
-        self.keys = timsort(self.keys, lambda x: x[0])
 
     def append(self, key, value, child):
         """Append a key,value with right child.
