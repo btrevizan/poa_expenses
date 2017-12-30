@@ -108,8 +108,10 @@ class Node():
         self.append_key(key, value)
 
         # Find pair's position in keys list
-        i = search(self.keys, (key, value))
-        i = i + 1 if i > 0 else 0
+        i = self.keys.index((key, value))
+
+        first_key = child.keys[0][0]
+        i = i + 1 if first_key > key else i
 
         # Append child
         self.__append_child(i, child)
