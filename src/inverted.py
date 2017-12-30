@@ -1,5 +1,5 @@
 import pickle
-from .helper import to_str
+from .helper import to_str, to_parts
 from .pybin import StructFile
 from .pysort import timsort
 
@@ -109,36 +109,29 @@ class Inverted():
         # If key is string, it can be a partial string
         if type(key) is str:
             # Clear string to match key
-            key = to_str(key)
-
-            # Find keys that have the partial key
-            dict_keys = list(self.__dict.keys())
-            key_in = [(key in k, k) for k in dict_keys]
-
-            # Filter the ones who does have
-            keys = filter(lambda x: x[0], key_in)
-            keys = list(keys)
-
-            if len(keys):
-                _, keys = zip(*keys)
-        else:
+            key = to_parts(key)
+        elif type(key) is not list:
             # Just force key to be a list
-            keys = [key]
+            key = [key]
 
         # To save values
         values = list()
 
         # For each key found...
-        for k in keys:
+        for k in key:
             try:
                 i = self.__dict[k]          # get file position
                 vals, _ = self.__get(i)     # get values
-                values += vals              # concat values
+
+                if type(values) is list:
+                    values = set(vals)
+                else:
+                    values = values.intersection(vals)  # concat values
             except KeyError:
-                pass                        # key dos not exist
+                return list()                           # key dos not exist
 
         # Return values
-        return values
+        return list(values)
 
     def update(self, old, new):
         """Update a key label.

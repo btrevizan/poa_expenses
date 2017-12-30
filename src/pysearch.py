@@ -32,6 +32,9 @@ def linear(sequence, n, key=def_key):
     """
     length = len(sequence)
 
+    if length == 0:
+        return None
+
     # For each element...
     for i in range(length):
 
@@ -58,6 +61,9 @@ def binary(sequence, n, key=def_key):
     The sequence should be order in a ascending order.
     """
     length = len(sequence)
+
+    if length == 0:
+        return None
 
     j = 0               # start
     k = length          # stop

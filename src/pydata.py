@@ -1,6 +1,6 @@
 from .inverted import Inverted
 from .pybin import StructFile
-from .helper import to_str
+from .helper import to_str, to_parts
 from datetime import date
 from .btree import BTree
 
@@ -32,10 +32,11 @@ class Registry():
         attrs = self.get_attr(self)
 
         # Get new id (incremental)
-        last = self.last()
-        last_pk = 0 if last is None else eval('last.' + self.__pk)
-        exec('self.{} = last_pk + 1'.format(self.__pk, self.__pk))
-        attrs[self.__pk] = eval('self.{}'.format(self.__pk))
+        if attrs[self.__pk] is None:
+            last = self.last()
+            last_pk = 0 if last is None else eval('last.' + self.__pk)
+            exec('self.{} = last_pk + 1'.format(self.__pk, self.__pk))
+            attrs[self.__pk] = eval('self.{}'.format(self.__pk))
 
         # Create a tuple of all properties
         data = tuple(attrs.values())
@@ -288,7 +289,9 @@ class Department(Registry):
 
         # Insert in inverted file
         inverted = self.get_inverted()     # open file
-        inverted.insert(self.name, id)     # insert
+
+        for name in to_parts(self.name):
+            inverted.insert(name, id)
 
         return id
 
@@ -299,7 +302,12 @@ class Department(Registry):
         super().update(i)
 
         inverted = self.get_inverted()              # open file
-        inverted.update(record.name, self.name)     # update
+
+        for name in to_parts(record.name):
+            inverted.delete(name, id)
+
+        for name in to_parts(self.name):
+            inverted.insert(name, id)
 
     @classmethod
     def select(cls, **kwargs):
@@ -312,9 +320,8 @@ class Department(Registry):
 
         # Clear string
         name = kwargs.get('name', '')
-        name = to_str(name)
+        name = to_parts(name)
 
-        # Get ids
         return cls.from_inverted(name, field=field)
 
     def delete(self):
@@ -384,7 +391,9 @@ class Subdepartment(Registry):
         inverted.insert(self.department_id, id)     # insert
 
         inverted = self.get_inverted('_name')       # open file
-        inverted.insert(self.name, id)              # insert
+
+        for name in to_parts(self.name):
+            inverted.insert(name, id)
 
         return id
 
@@ -398,7 +407,12 @@ class Subdepartment(Registry):
         inverted.update(record.department_id, self.department_id)     # update
 
         inverted = self.get_inverted('_name')                         # open file
-        inverted.update(record.name, self.name)                       # update
+
+        for name in to_parts(record.name):
+            inverted.delete(name, id)
+
+        for name in to_parts(self.name):
+            inverted.insert(name, id)
 
     @classmethod
     def select(cls, **kwargs):
@@ -412,6 +426,7 @@ class Subdepartment(Registry):
 
         dep_id = kwargs.get('dep_id', None)
         name = kwargs.get('name', '')
+        name = to_parts(name)
 
         if dep_id:
             return cls.from_inverted(dep_id, field=field)
@@ -490,7 +505,9 @@ class Employee(Registry):
         inverted.insert(self.subdepartment_id, id)    # insert
 
         inverted = self.get_inverted('_name')         # open file
-        inverted.insert(self.name, id)                # insert
+
+        for name in to_parts(self.name):
+            inverted.insert(name, id)
 
         subdep = Subdepartment.get(self.subdepartment_id)
         inverted = self.get_inverted('_department')              # open file
@@ -508,7 +525,12 @@ class Employee(Registry):
         inverted.update(record.subdepartment_id, self.subdepartment_id)  # update
 
         inverted = self.get_inverted('_name')                            # open file
-        inverted.update(record.name, self.name)                          # update
+
+        for name in to_parts(record.name):
+            inverted.delete(name, id)
+
+        for name in to_parts(self.name):
+            inverted.insert(name, id)
 
     @classmethod
     def select(cls, **kwargs):
@@ -527,6 +549,8 @@ class Employee(Registry):
         dep_id = kwargs.get('dep_id', None)         # department id
         subdep_id = kwargs.get('subdep_id', None)   # subdepartment id
         name = kwargs.get('name', '')               # employee's name
+
+        name = to_parts(name)
 
         # If dep_id is set
         if dep_id:

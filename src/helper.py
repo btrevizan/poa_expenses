@@ -27,3 +27,16 @@ def to_str(value):
     value = value.upper()
 
     return value
+
+
+def to_parts(value):
+    """Split string by space.
+
+    Keyword argument:
+        value -- value to be divided
+    """
+    value = to_str(value)                          # strip 'n upper
+    values = value.split(' ')                      # split
+    values = filter(lambda x: len(x) > 3, values)  # remove stop word
+
+    return list(values)

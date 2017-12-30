@@ -12,7 +12,8 @@ def load(filepath):
     # Mapping to right column index
     cols = {
         'department': 25, 'subdepartment': 12, 'date': 17,
-        'employee': 5, 'description': 15, 'value': 23
+        'employee': 5, 'description': 15, 'value': 23,
+        'transaction_id': 19, 'department_id': 2, 'subdepartment_id': 21,
     }
 
     n = 0
@@ -23,28 +24,33 @@ def load(filepath):
 
     line = file.readline()
 
+    # Open btrees
+    dep_btree = Department.get_btree()
+    subdep_btree = Subdepartment.get_btree()
+    trans_btree = Transaction.get_btree()
+
     while line:
         data = line.split(';')
 
         # Save deparment
         dep_name = to_str(data[cols['department']])
-        department = Department.select(name=dep_name)
+        dep_id = int(data[cols['department_id']])
 
-        if len(department):
-            department = department[0]
-        else:
-            department = Department(name=dep_name)
-            department.save()
+        if dep_btree.search(dep_id) is None:
+            department = Department(id=dep_id, name=dep_name)
+            department.insert()
+
+            dep_btree = Department.get_btree()
 
         # Save subdepartment
         subdep_name = to_str(data[cols['subdepartment']])
-        subdepartment = Subdepartment.select(name=subdep_name)
+        subdep_id = int(data[cols['subdepartment_id']])
 
-        if len(subdepartment):
-            subdepartment = subdepartment[0]
-        else:
-            subdepartment = Subdepartment(name=subdep_name, department_id=department.id)
-            subdepartment.save()
+        if subdep_btree.search(subdep_id) is None:
+            subdepartment = Subdepartment(id=subdep_id, name=subdep_name, department_id=dep_id)
+            subdepartment.insert()
+
+            subdep_btree = Subdepartment.get_btree()
 
         # Save employee
         employee_name = to_str(data[cols['employee']])
@@ -53,25 +59,27 @@ def load(filepath):
         if len(employee):
             employee = employee[0]
         else:
-            employee = Employee(name=employee_name, subdepartment_id=subdepartment.id)
-            employee.save()
+            employee = Employee(name=employee_name, subdepartment_id=subdep_id)
+            employee.insert()
 
         # Save trenasaction
+        t_id = int(data[cols['transaction_id']])
         description = to_str(data[cols['description']])
         value = float(data[cols['value']].replace(',', '.'))
         date = to_date(data[cols['date']])
 
-        transaction = Transaction.select(employee_id=employee.id, description=description)
-
-        if not len(transaction):
+        if trans_btree.search(t_id) is None:
             transaction = Transaction()
 
+            transaction.id = t_id
             transaction.employee_id = employee.id
             transaction.description = description
             transaction.value = value
             transaction.date = date
 
-            transaction.save()
+            transaction.insert()
+
+            trans_btree = Transaction.get_btree()
 
         n = n + 1
         line = file.readline()
