@@ -81,7 +81,7 @@ def load(filepath):
 
             trans_btree = Transaction.get_btree()
 
-        n = n + 1
+            n = n + 1
         line = file.readline()
 
     file.close()
@@ -151,7 +151,7 @@ def search(args):
 
         results = eval('{}.select(**kwargs)'.format(e_name))
 
-    if results:
+    if len(results) > 0 and results[0] is not None:
         print('{} record(s) found.\n'.format(len(results)))
 
         for obj in results:
