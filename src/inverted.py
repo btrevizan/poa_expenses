@@ -156,22 +156,25 @@ class Inverted():
 
         vals, pos = self.__get(i)
 
-        j = vals.index(value)         # get value index
-        del vals[j]                   # delete value
+        try:
+            j = vals.index(value)         # get value index
+            del vals[j]                   # delete value
 
-        for i in range(len(pos) - 1):
-            p = pos[i]
-            l = i * self.n_keys
-            values = vals[l:l + self.n_keys]
-            values.append(pos[i + 1])
-            self.__save(p, values)
+            for i in range(len(pos) - 1):
+                p = pos[i]
+                l = i * self.n_keys
+                values = vals[l:l + self.n_keys]
+                values.append(pos[i + 1])
+                self.__save(p, values)
 
-        # Get elements from last list
-        j = len(vals) // self.n_keys
-        j = j * self.n_keys
+            # Get elements from last list
+            j = len(vals) // self.n_keys
+            j = j * self.n_keys
 
-        values = vals[j:]
-        self.__save(pos[-1], values)
+            values = vals[j:]
+            self.__save(pos[-1], values)
+        except ValueError:
+            pass
 
     def __save(self, i, values):
         """Prepare data and save on-disk.
