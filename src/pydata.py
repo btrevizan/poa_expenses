@@ -244,6 +244,7 @@ class Registry():
 
         return string[:-1]
 
+
 class Department(Registry):
     """Represent a Department registry.
 
@@ -304,10 +305,10 @@ class Department(Registry):
         inverted = self.get_inverted()              # open file
 
         for name in to_parts(record.name):
-            inverted.delete(name, id)
+            inverted.delete(name, self.id)
 
         for name in to_parts(self.name):
-            inverted.insert(name, id)
+            inverted.insert(name, self.id)
 
     @classmethod
     def select(cls, **kwargs):
@@ -326,10 +327,10 @@ class Department(Registry):
 
     def delete(self):
         """Remove a registry on-disk."""
-        super().delete()
-
         inverted = self.get_inverted()          # open file
-        inverted.delete(self.name, self.id)     # delete
+
+        for name in to_parts(self.name):
+            inverted.delete(name, self.id)
 
         # Delete subdepartments
         sub_inv = Subdepartment.get_inverted()
@@ -338,6 +339,8 @@ class Department(Registry):
         for sid in sub_ids:
             subdep = Subdepartment.get(sid)
             subdep.delete()
+
+        super().delete()
 
 class Subdepartment(Registry):
     """Represent a Subdepartment registry.
@@ -403,16 +406,13 @@ class Subdepartment(Registry):
 
         super().update(i)
 
-        inverted = self.get_inverted()                                # open file
-        inverted.update(record.department_id, self.department_id)     # update
-
         inverted = self.get_inverted('_name')                         # open file
 
         for name in to_parts(record.name):
-            inverted.delete(name, id)
+            inverted.delete(name, self.id)
 
         for name in to_parts(self.name):
-            inverted.insert(name, id)
+            inverted.insert(name, self.id)
 
     @classmethod
     def select(cls, **kwargs):
@@ -436,13 +436,13 @@ class Subdepartment(Registry):
 
     def delete(self):
         """Remove a registry on-disk."""
-        super().delete()
-
         inverted = self.get_inverted()                   # open file
         inverted.delete(self.department_id, self.id)     # delete
 
         inverted = self.get_inverted('_name')    # open file
-        inverted.delete(self.name, self.id)      # delete
+
+        for name in to_parts(self.name):
+            inverted.delete(name, self.id)
 
         # Delete employees
         emp_inv = Employee.get_inverted()
@@ -451,6 +451,8 @@ class Subdepartment(Registry):
         for eid in emp_ids:
             employee = Employee.get(eid)
             employee.delete()
+
+        super().delete()
 
 
 class Employee(Registry):
@@ -521,16 +523,13 @@ class Employee(Registry):
 
         super().update(i)
 
-        inverted = self.get_inverted()                                   # open file
-        inverted.update(record.subdepartment_id, self.subdepartment_id)  # update
-
         inverted = self.get_inverted('_name')                            # open file
 
         for name in to_parts(record.name):
-            inverted.delete(name, id)
+            inverted.delete(name, self.id)
 
         for name in to_parts(self.name):
-            inverted.insert(name, id)
+            inverted.insert(name, self.id)
 
     @classmethod
     def select(cls, **kwargs):
@@ -566,13 +565,13 @@ class Employee(Registry):
 
     def delete(self):
         """Remove a registry on-disk."""
-        super().delete()
-
         inverted = self.get_inverted()                      # open file
         inverted.delete(self.subdepartment_id, self.id)     # delete
 
         inverted = self.get_inverted('_name')    # open file
-        inverted.delete(self.name, self.id)      # delete
+
+        for name in to_parts(self.name):
+            inverted.delete(name, self.id)
 
         # Delete transactions
         trans_inv = Transaction.get_inverted()
@@ -581,6 +580,8 @@ class Employee(Registry):
         for tid in trans_ids:
             transaction = Transaction.get(tid)
             transaction.delete()
+
+        super().delete()
 
 
 class Transaction(Registry):
@@ -656,15 +657,6 @@ class Transaction(Registry):
 
         return id
 
-    def update(self, i=None):
-        """Update a record."""
-        record = self.get(self.id)
-
-        super().update(i)
-
-        inverted = self.get_inverted()                         # open file
-        inverted.update(record.employee_id, self.employee_id)  # update
-
     @classmethod
     def select(cls, **kwargs):
         """Select by name.
@@ -708,10 +700,22 @@ class Transaction(Registry):
 
     def delete(self):
         """Remove a registry on-disk."""
-        super().delete()
-
         inverted = self.get_inverted()                  # open file
         inverted.delete(self.employee_id, self.id)      # delete
+
+        employee = Employee.get(self.employee_id)
+        inverted = self.get_inverted('_subdepartment')
+        inverted.delete(employee.subdepartment_id, self.id)
+
+        subdep = Subdepartment.get(employee.subdepartment_id)
+        inverted = self.get_inverted('_department')
+        inverted.delete(subdep.department_id, self.id)
+
+        d = date.fromtimestamp(self.date)
+        inverted = self.get_inverted('_year')
+        inverted.delete(d.year, self.id)
+
+        super().delete()
 
     def __str__(self):
         attrs = self.get_attr(self)
