@@ -106,20 +106,15 @@ def update(args):
     e_name = args.u_entity.capitalize()
     entity = eval('{}.get({})'.format(e_name, args.id))
 
+    if entity is None:
+        print('Nothing was found.')
+        return
+
     print(str(entity))
     print('-' * 80)
 
     if args.name:
         entity.name = to_str(args.name)
-
-    if args.department_id:
-        entity.department_id = args.department_id
-
-    if args.subdepartment_id:
-        entity.subdepartment_id = args.subdepartment_id
-
-    if args.employee_id:
-        entity.employee_id = args.employee_id
 
     if args.description:
         entity.description = to_str(args.description)
