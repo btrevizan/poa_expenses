@@ -245,7 +245,7 @@ class BTree():
         # Search node with key
         node = self.root                            # start from root
         i = search(node.keys, key, lambda x: x[0])  # node.key's index
-        j = None
+        j = i + 1 if i is not None else None
 
         while i is None and not node.is_leaf:
             father = node
@@ -484,28 +484,30 @@ class BTree():
         # Get last node in file
         last = self.__load(last_i)
 
-        # Find last's father to update position
-        father = self.root
-        key = last.keys[0][0]
+        if last.pos != node.pos:
+            # Need to update position
+            # Find last's father to update position
+            father = self.root
+            key = last.keys[0][0]
 
-        i = father.search(key)
-        child = self.__get_node(father.children[i])
-
-        while child.pos != last.pos:
-            father = child
             i = father.search(key)
             child = self.__get_node(father.children[i])
 
-        # Update father's child position and save
-        father.children = [self.__get_node(child) for child in father.children]
-        children_pos = [child.pos for child in father.children]
-        j = children_pos.index(last.pos)
-        father.children[j].pos = node.pos
-        self.__save(father)
+            while child.pos != last.pos:
+                father = child
+                i = father.search(key)
+                child = self.__get_node(father.children[i])
 
-        # Update last's position and save
-        last.pos = node.pos
-        self.__save(last)
+            # Update father's child position and save
+            father.children = [self.__get_node(child) for child in father.children]
+            children_pos = [child.pos for child in father.children]
+            j = children_pos.index(last.pos)
+            father.children[j].pos = node.pos
+            self.__save(father)
+
+            # Update last's position and save
+            last.pos = node.pos
+            self.__save(last)
 
         # Delete last
         self.__file.truncate(self.node_len)
